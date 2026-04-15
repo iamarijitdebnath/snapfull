@@ -68,9 +68,18 @@ async function injectContentScript(tabId) {
 
 /**
  * Capture the visible area of a tab as a data URL
+ * Enforces rate limiting (max 2 calls per second) to prevent quota errors
  */
+let lastCaptureTime = 0;
+
 function captureVisibleTab(windowId) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    const timeSinceLast = Date.now() - lastCaptureTime;
+    if (timeSinceLast < 550) {
+      await sleep(550 - timeSinceLast);
+    }
+    lastCaptureTime = Date.now();
+
     chrome.tabs.captureVisibleTab(
       windowId,
       { format: 'png', quality: 100 },

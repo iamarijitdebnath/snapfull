@@ -130,9 +130,17 @@ async function captureFullPage(tabId, progressCallback = null) {
     const tab = await chrome.tabs.get(tabId);
 
     // Check for restricted pages
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') ||
-        tab.url.startsWith('about:') || tab.url.startsWith('edge://')) {
-      throw new Error('Cannot capture browser internal pages');
+    const url = tab.url || '';
+    if (
+        url.startsWith('chrome://') || 
+        url.startsWith('chrome-extension://') ||
+        url.startsWith('about:') || 
+        url.startsWith('edge://') ||
+        url.startsWith('devtools://') ||
+        url.includes('chrome.google.com/webstore') ||
+        url.includes('chromewebstore.google.com')
+    ) {
+      throw new Error('Chrome policy prevents full-page screenshots on this page.');
     }
 
     // Step 1: Inject content script

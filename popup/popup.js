@@ -183,8 +183,33 @@ function formatTimestamp(ts) {
 }
 
 // ── Capture Handlers ──────────────────────────────────────────────────
-function startCapture(action) {
+async function startCapture(action) {
   if (isCapturing) return;
+
+  // Pre-flight check to prevent extension gallery "cannot be scripted" errors
+  if (action === 'captureFullPage') {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab) {
+        const url = tab.url || '';
+        if (
+          url.startsWith('chrome://') || 
+          url.startsWith('chrome-extension://') ||
+          url.startsWith('about:') || 
+          url.startsWith('devtools://') ||
+          url.startsWith('edge://') ||
+          url.startsWith('https://chrome.google.com/webstore') ||
+          url.startsWith('https://chromewebstore.google.com')
+        ) {
+          showError('Chrome policy prevents full-page screenshots on this page.');
+          return;
+        }
+      }
+    } catch (e) {
+      // Ignore and proceed to normal flow if query fails
+    }
+  }
+
   isCapturing = true;
 
   // Show progress
@@ -208,6 +233,7 @@ function startCapture(action) {
       progressText.textContent = 'Done! Opening editor...';
       setTimeout(() => window.close(), 500);
     } else {
+      // Handle the case where the error bubbles up
       showError(response?.error || 'Capture failed. Please try again.');
       progressSection.classList.add('hidden');
       captureSection.classList.remove('capturing');

@@ -138,7 +138,7 @@ function renderHistory(history) {
       e.stopPropagation();
       chrome.runtime.sendMessage({
         action: 'openEditorWithImage',
-        dataUrl: item.fullImage
+        imageId: item.id
       });
       window.close();
     });

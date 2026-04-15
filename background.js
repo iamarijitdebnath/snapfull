@@ -241,21 +241,30 @@ async function saveToHistory(dataUrl, pageUrl, pageTitle) {
     // Create a small thumbnail (max 200px wide)
     const thumbnailDataUrl = await createThumbnail(dataUrl, 200);
 
+    const id = Date.now().toString(36);
     history.unshift({
-      id: Date.now().toString(36),
+      id: id,
       thumbnail: thumbnailDataUrl,
-      fullImage: dataUrl,
       pageUrl,
       pageTitle,
       timestamp: Date.now()
     });
 
     // Keep only the last N entries
+    const keysToRemove = [];
     while (history.length > settings.maxHistory) {
-      history.pop();
+      const removed = history.pop();
+      keysToRemove.push(`image_${removed.id}`);
     }
 
-    await chrome.storage.local.set({ history });
+    await chrome.storage.local.set({
+      history,
+      [`image_${id}`]: dataUrl
+    });
+
+    if (keysToRemove.length > 0) {
+      await chrome.storage.local.remove(keysToRemove);
+    }
   } catch (err) {
     console.error('Failed to save to history:', err);
     // Non-fatal — don't break the capture flow
@@ -366,7 +375,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'clearHistory': {
       (async () => {
         try {
-          await chrome.storage.local.remove('history');
+          const stored = await chrome.storage.local.get('history');
+          const keysToRemove = ['history'].concat((stored.history || []).map(h => `image_${h.id}`));
+          await chrome.storage.local.remove(keysToRemove);
           sendResponse({ success: true });
         } catch (err) {
           sendResponse({ success: false, error: err.message });
@@ -381,6 +392,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const stored = await chrome.storage.local.get('history');
           const history = (stored.history || []).filter(h => h.id !== message.id);
           await chrome.storage.local.set({ history });
+          await chrome.storage.local.remove(`image_${message.id}`);
           sendResponse({ success: true });
         } catch (err) {
           sendResponse({ success: false, error: err.message });
@@ -392,7 +404,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'openEditorWithImage': {
       (async () => {
         try {
-          await openEditor(message.dataUrl);
+          const imageKey = `image_${message.imageId}`;
+          const stored = await chrome.storage.local.get(imageKey);
+          await openEditor(stored[imageKey] || message.dataUrl);
           sendResponse({ success: true });
         } catch (err) {
           sendResponse({ success: false, error: err.message });

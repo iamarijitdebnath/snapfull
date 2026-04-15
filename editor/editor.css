@@ -1,0 +1,521 @@
+/**
+ * SnapFull — Editor CSS
+ * 
+ * Full-screen dark editor interface with a left toolbar,
+ * canvas workspace, and top action bar.
+ */
+
+/* ── Reset & Base ────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #0a0a12;
+  --bg-secondary: #0f0f18;
+  --bg-surface: #16162a;
+  --bg-surface-hover: #1e1e3a;
+  --bg-elevated: #222244;
+  --bg-canvas: #0d0d16;
+
+  --text-primary: #e8eaf0;
+  --text-secondary: #8b8fa8;
+  --text-tertiary: #555878;
+
+  --accent-start: #6366f1;
+  --accent-end: #8b5cf6;
+  --accent-glow: rgba(99, 102, 241, 0.3);
+  --accent-subtle: rgba(99, 102, 241, 0.12);
+
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+
+  --success: #22c55e;
+  --warning: #f59e0b;
+
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --topbar-height: 48px;
+  --toolbar-width: 52px;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ── Top Bar ─────────────────────────────────────────────────────────── */
+.editor-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 100;
+  gap: 12px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+}
+
+.topbar-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+}
+
+.topbar-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+
+.topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.topbar-separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+  margin: 0 6px;
+}
+
+/* Zoom */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+}
+
+.zoom-level {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Tool Buttons ────────────────────────────────────────────────────── */
+.tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.tool-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.tool-btn.tool-active {
+  background: var(--accent-subtle);
+  color: var(--accent-start);
+  box-shadow: inset 0 0 0 1px var(--accent-start);
+}
+
+.tool-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.tool-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+/* ── Export Buttons ───────────────────────────────────────────────────── */
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-export:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.btn-export-accent {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  border-color: transparent;
+  color: white;
+}
+
+.btn-export-accent:hover {
+  box-shadow: 0 2px 12px var(--accent-glow);
+  color: white;
+}
+
+/* ── Main Layout ─────────────────────────────────────────────────────── */
+.editor-layout {
+  display: flex;
+  position: fixed;
+  top: var(--topbar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* ── Sidebar Toolbar ─────────────────────────────────────────────────── */
+.editor-toolbar {
+  width: var(--toolbar-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  gap: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.editor-toolbar::-webkit-scrollbar {
+  width: 0;
+}
+
+.toolbar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.toolbar-group-options {
+  gap: 8px;
+}
+
+.toolbar-divider {
+  width: 70%;
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
+/* Color Picker */
+.color-picker-label {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.color-picker-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.color-picker-swatch {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-color);
+  background: #ef4444;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.color-picker-swatch:hover {
+  border-color: var(--border-hover);
+}
+
+/* Stroke Width */
+.stroke-control,
+.font-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.stroke-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.stroke-range {
+  width: 38px;
+  height: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-elevated);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.stroke-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-start);
+  cursor: pointer;
+}
+
+.stroke-value {
+  font-size: 0.6rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Canvas Container ────────────────────────────────────────────────── */
+.editor-canvas-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  /* Checkerboard pattern for transparency */
+  background-image:
+    linear-gradient(45deg, #111125 25%, transparent 25%),
+    linear-gradient(-45deg, #111125 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #111125 75%),
+    linear-gradient(-45deg, transparent 75%, #111125 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+.canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+#editor-canvas {
+  display: block;
+}
+
+/* ── Crop Overlay ────────────────────────────────────────────────────── */
+.crop-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
+.crop-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+.btn-crop-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-crop-confirm {
+  background: var(--success);
+  color: white;
+}
+
+.btn-crop-confirm:hover {
+  filter: brightness(1.1);
+}
+
+.btn-crop-cancel {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.btn-crop-cancel:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+/* ── Toast ────────────────────────────────────────────────────────────── */
+.toast {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  z-index: 200;
+  animation: toastIn 300ms ease-out;
+  white-space: nowrap;
+}
+
+.toast.toast-success {
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.toast.toast-error {
+  border-color: var(--danger);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* ── Loading Overlay ─────────────────────────────────────────────────── */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--bg-primary);
+  z-index: 300;
+  transition: opacity 500ms ease-out;
+}
+
+.loading-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--bg-elevated);
+  border-top-color: var(--accent-start);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ── Animations ──────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+}
+
+/* ── Fabric.js overrides ─────────────────────────────────────────────── */
+.canvas-container canvas {
+  border-radius: 0 !important;
+}
+
+/* Selection style */
+.upper-canvas {
+  cursor: default !important;
+}
